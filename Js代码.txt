@@ -8,4 +8,8 @@ if (password !='密码')
    //密码不正确就关闭
 //-->
 </script>
+</head>
+2.
 <head>
+ <link rel="shortcut icon"href="https://zhuzhuzihan.github.io/mczihan/favicon.ico"type="favicon"/>
+ <title>xx</title>
