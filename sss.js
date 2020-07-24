@@ -1,2 +1,2 @@
 // JavaScript Document
-var xx="88888888";
+var xx="20090714r";
