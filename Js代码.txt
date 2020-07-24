@@ -40,3 +40,34 @@ return " ";
 <input type="button" value="Enter Protected Area" onClick="passWord()">
 </FORM>
 </CENTER>
+
+
+4.<script src="sss.js"></script>
+<script>
+	function password() {
+		var testV = 1;
+		var psw = prompt("请输入密码：","");
+		while (testV < 3) {
+			if (!psw){
+				history.go(-1);
+			}
+			if (psw == xx) {
+				location.href="x.html";
+				break;
+			}
+			testV+=1;
+			psw=prompt("错误，请重新输入密码：","");
+		}
+		if (psw!=xx && testV ==3){
+			alert("错，请刷新重新输入密码");
+		}
+			return " ";
+	}
+	
+	password();
+
+</script>
+
+4.1 js
+// JavaScript Document
+var xx="88888888";
