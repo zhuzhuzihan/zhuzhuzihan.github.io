@@ -5,15 +5,16 @@
  <title>子涵</title>
  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
  <div class="cf-turnstile" data-sitekey="0x4AAAAAAAHkKyN6cHclRYLp" data-callback="javascriptCallback">
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" defer>
-   window.onloadTurnstileCallback = function () {
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit">
+   // if using synchronous loading, will be called once the DOM is ready
+turnstile.ready(function () {
     turnstile.render('#example-container', {
         sitekey: '0x4AAAAAAAHkKyN6cHclRYLp',
         callback: function(token) {
             console.log(`Challenge Success ${token}`);
         },
     });
-};
+});
   </script>
  </div>
 </head>
