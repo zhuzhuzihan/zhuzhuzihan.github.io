@@ -10,6 +10,7 @@ sysctl -p
 Address = 你的IP地址
 PrivateKey = 你的服务器私有key
 ListenPort = 监听端口
+DNS = DNS服务器，不选择代表使用默认
 PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE; ip6tables -A FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE; ip6tables -D FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 #linux转发
@@ -18,4 +19,4 @@ PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING 
 PublicKey = 客户端公钥
 AllowedIPs = 允许通过的ip
 Endpoint = 接入点
-PeristentKeepalive = 25
+PersistentKeepalive = 25
