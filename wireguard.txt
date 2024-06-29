@@ -4,7 +4,7 @@ wg genkey | tee peer_A.key | wg pubkey > peer_A.pub && cat peer_A.key && cat pee
 echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.conf
 echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.conf
 sysctl -p
-
+systemctl enable wg-quick@wg0开机自启
 
 [Interface]
 Address = 你的IP地址
