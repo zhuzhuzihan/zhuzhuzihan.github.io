@@ -9,6 +9,14 @@
     <meta http-equiv="refresh" content="0;URL='/dice/'">
   </head>
   <body>
-    Redirecting to home page...
+    <script>
+      // 确保正确处理子路径
+      const basePath = '/dice';
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith(basePath)) {
+        window.location.href = basePath + (currentPath === '/' ? '' : currentPath);
+      }
+    </script>
+    Redirecting to dice simulator...
   </body>
 </html>
