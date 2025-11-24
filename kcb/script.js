@@ -510,8 +510,8 @@ class ScheduleManager {
         // 根据不同的时间段类型确定结束时间
         switch (timeStatus.type) {
             case 'class':
-                if (this.currentTimeSlot) {
-                    endTime = this.currentTimeSlot.endMinutes;
+                if (timeStatus.timeSlot) {
+                    endTime = timeStatus.timeSlot.endMinutes;
                 }
                 break;
             case 'break':
