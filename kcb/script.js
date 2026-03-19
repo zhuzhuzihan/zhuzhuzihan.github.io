@@ -938,18 +938,37 @@ class ScheduleManager {
         }
     }
 
-    checkUrlConfig() {
+    async checkUrlConfig() {
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // 新格式：使用 c 参数（压缩）
+        const compressedParam = urlParams.get('c');
+        // 旧格式：使用 config 参数（未压缩）
         const configParam = urlParams.get('config');
         
-        if (configParam) {
+        let config = null;
+        
+        if (compressedParam) {
             try {
-                const config = JSON.parse(decodeURIComponent(configParam));
-                this.loadConfigFromUrl(config);
+                const decompressed = await this.decompressString(compressedParam);
+                config = JSON.parse(decompressed);
+            } catch (error) {
+                console.error('URL配置解压失败:', error);
+                this.showNotification('URL配置解压失败', 'error');
+                return;
+            }
+        } else if (configParam) {
+            try {
+                config = JSON.parse(decodeURIComponent(configParam));
             } catch (error) {
                 console.error('URL配置解析失败:', error);
                 this.showNotification('URL配置格式错误', 'error');
+                return;
             }
+        }
+        
+        if (config) {
+            this.loadConfigFromUrl(config);
         }
     }
 
@@ -991,6 +1010,7 @@ class ScheduleManager {
                 // 清除URL参数
                 const url = new URL(window.location);
                 url.searchParams.delete('config');
+                url.searchParams.delete('c');
                 window.history.replaceState({}, '', url);
             }
         } catch (error) {
@@ -999,10 +1019,10 @@ class ScheduleManager {
         }
     }
 
-    generateConfigUrl() {
+    async generateConfigUrl() {
         try {
             const config = {
-                version: '1.0',
+                version: '1.1',
                 exportTime: new Date().toISOString(),
                 settings: this.settings,
                 courses: this.courses,
@@ -1010,9 +1030,11 @@ class ScheduleManager {
             };
             
             const configStr = JSON.stringify(config);
-            const encodedConfig = encodeURIComponent(configStr);
+            
+            // 使用 gzip 压缩
+            const compressedBase64 = await this.compressString(configStr);
             const baseUrl = window.location.origin + window.location.pathname;
-            const configUrl = `${baseUrl}?config=${encodedConfig}`;
+            const configUrl = `${baseUrl}?c=${compressedBase64}`;
             
             // 复制到剪贴板
             navigator.clipboard.writeText(configUrl).then(() => {
@@ -1025,6 +1047,84 @@ class ScheduleManager {
             console.error('生成配置URL失败:', error);
             this.showNotification('生成配置URL失败', 'error');
         }
+    }
+
+    async compressString(str) {
+        // 将字符串转换为 Uint8Array
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        
+        // 使用 CompressionStream 进行 gzip 压缩
+        const cs = new CompressionStream('gzip');
+        const writer = cs.writable.getWriter();
+        writer.write(data);
+        writer.close();
+        
+        // 读取压缩结果
+        const reader = cs.readable.getReader();
+        const chunks = [];
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+        }
+        
+        // 合并所有 chunks
+        const compressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+        let offset = 0;
+        for (const chunk of chunks) {
+            compressed.set(chunk, offset);
+            offset += chunk.length;
+        }
+        
+        // 转换为 base64 URL 安全编码
+        let binary = '';
+        for (let i = 0; i < compressed.length; i++) {
+            binary += String.fromCharCode(compressed[i]);
+        }
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    async decompressString(base64Str) {
+        // 将 URL 安全 base64 转回标准 base64
+        let base64 = base64Str.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) {
+            base64 += '=';
+        }
+        
+        // 解码 base64
+        const binary = atob(base64);
+        const compressed = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            compressed[i] = binary.charCodeAt(i);
+        }
+        
+        // 使用 DecompressionStream 解压
+        const ds = new DecompressionStream('gzip');
+        const writer = ds.writable.getWriter();
+        writer.write(compressed);
+        writer.close();
+        
+        // 读取解压结果
+        const reader = ds.readable.getReader();
+        const chunks = [];
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+        }
+        
+        // 合并所有 chunks 并解码
+        const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+        const decompressed = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const chunk of chunks) {
+            decompressed.set(chunk, offset);
+            offset += chunk.length;
+        }
+        
+        const decoder = new TextDecoder();
+        return decoder.decode(decompressed);
     }
 
     showConfigUrlDialog(url) {
@@ -1044,7 +1144,7 @@ class ScheduleManager {
                             <input type="text" class="form-control" value="${url}" readonly id="configUrlInput">
                             <button class="btn btn-outline-primary" onclick="document.getElementById('configUrlInput').select()">选择</button>
                         </div>
-                        <p class="text-muted mt-2">注意：URL长度有限制，复杂配置可能无法完整传输。</p>
+                        <p class="text-muted mt-2">配置已使用 gzip 压缩，大幅缩短 URL 长度。</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
