@@ -900,6 +900,7 @@ class ScheduleManager {
                 // 编辑模式
                 this.presetCourses[editIndex] = { ...this.presetCourses[editIndex], ...courseData };
                 delete e.target.dataset.editIndex;
+                this.savePresetCourses();
                 this.showNotification('预选课程更新成功！', 'success');
             } else {
                 // 添加模式
