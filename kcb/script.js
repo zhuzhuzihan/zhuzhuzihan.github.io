@@ -201,44 +201,6 @@ class ScheduleManager {
         });
     }
 
-    renderSchedule() {
-        const tbody = document.getElementById('scheduleBody');
-        tbody.innerHTML = '';
-
-        this.timeSlots.forEach((slot, timeIndex) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td class="fw-bold">${slot.start}-${slot.end}</td>`;
-            
-            for (let day = 1; day <= 7; day++) {
-                const courseKey = `${day}-${timeIndex}`;
-                const course = this.courses[courseKey];
-                
-                const cell = document.createElement('td');
-                cell.dataset.day = day;
-                cell.dataset.time = timeIndex;
-                
-                if (course) {
-                    const courseStyle = course.color ? `style="background: linear-gradient(135deg, ${course.color} 0%, ${course.color}dd 100%);"` : '';
-                    cell.innerHTML = `
-                        <div class="course-item" ${courseStyle}>
-                            <div class="course-name fw-bold">${course.name}</div>
-                            <div class="course-teacher small">${course.teacher || ''}</div>
-                            <div class="course-location small">${course.location || ''}</div>
-                            ${course.description ? `<div class="course-description small text-muted">${course.description}</div>` : ''}
-                            <button class="btn btn-sm btn-outline-light mt-1" onclick="scheduleManager.removeCourse(${day}, ${timeIndex})">删除</button>
-                        </div>
-                    `;
-                } else {
-                    cell.innerHTML = `<button class="btn btn-sm btn-outline-primary" onclick="scheduleManager.showAddCourse(${day}, ${timeIndex})">添加</button>`;
-                }
-                
-                row.appendChild(cell);
-            }
-            
-            tbody.appendChild(row);
-        });
-    }
-
     showAddCourse(day, timeIndex) {
         document.getElementById('courseDay').value = day;
         document.getElementById('courseTime').value = timeIndex;
@@ -252,7 +214,9 @@ class ScheduleManager {
         this.courses[key] = {
             name: courseData.name,
             teacher: courseData.teacher,
-            location: courseData.location
+            location: courseData.location,
+            color: courseData.color,
+            description: courseData.description
         };
         this.saveCourses();
     }
@@ -527,13 +491,13 @@ class ScheduleManager {
         }
         
         if (endTime > 0) {
-            const remainingMinutes = endTime - currentMinutes - 1;
-            const remainingSeconds = 60 - currentSeconds;
+            const totalRemainingSeconds = (endTime - currentMinutes) * 60 - currentSeconds;
             
-            if (remainingMinutes >= 0) {
-                const hours = Math.floor(remainingMinutes / 60);
-                const minutes = remainingMinutes % 60;
-                countdownElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+            if (totalRemainingSeconds > 0) {
+                const hours = Math.floor(totalRemainingSeconds / 3600);
+                const minutes = Math.floor((totalRemainingSeconds % 3600) / 60);
+                const seconds = totalRemainingSeconds % 60;
+                countdownElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 return;
             }
         }
