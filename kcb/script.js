@@ -516,69 +516,104 @@ class ScheduleManager {
         return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
     }
 
-    exportConfig() {
+    async exportConfig() {
         try {
+            // 使用紧凑格式（短键名）提高压缩率
             const config = {
-                version: '1.0',
-                exportTime: new Date().toISOString(),
-                settings: this.settings,
-                courses: this.courses,
-                presetCourses: this.presetCourses
+                s: this.settings,
+                c: this.courses,
+                p: this.presetCourses
             };
             
-            const dataStr = JSON.stringify(config, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const configStr = JSON.stringify(config);
+            const compressed = await this.compressString(configStr);
             
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `课程表配置_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.json`;
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            URL.revokeObjectURL(link.href);
-            
-            // 显示成功提示
-            this.showNotification('配置导出成功！', 'success');
+            // 复制到剪贴板
+            navigator.clipboard.writeText(compressed).then(() => {
+                this.showNotification('配置已复制到剪贴板！可直接粘贴分享', 'success');
+            }).catch(() => {
+                // 如果剪贴板API不可用，显示对话框
+                this.showExportDialog(compressed);
+            });
         } catch (error) {
             console.error('导出配置失败:', error);
-            this.showNotification('导出配置失败，请重试', 'error');
+            this.showNotification('导出配置失败', 'error');
         }
+    }
+
+    showExportDialog(compressed) {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">导出配置</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>请复制以下配置字符串：</p>
+                        <textarea class="form-control" rows="6" readonly>${compressed}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        modal.addEventListener('hidden.bs.modal', () => {
+            document.body.removeChild(modal);
+        });
     }
 
     importConfig(event) {
         const file = event.target.files[0];
         if (!file) return;
         
-        if (file.type !== 'application/json') {
-            this.showNotification('请选择JSON格式的配置文件', 'error');
-            return;
-        }
-        
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
-                const config = JSON.parse(e.target.result);
+                const content = e.target.result.trim();
+                let config = null;
+                
+                // 尝试判断是压缩格式还是JSON格式
+                if (content.startsWith('{')) {
+                    // JSON 格式
+                    config = JSON.parse(content);
+                } else {
+                    // 压缩格式
+                    const decompressed = await this.decompressString(content);
+                    config = JSON.parse(decompressed);
+                }
+                
+                // 解析配置（支持新旧两种格式）
+                const settings = config.s || config.settings;
+                const courses = config.c || config.courses;
+                const presetCourses = config.p || config.presetCourses;
                 
                 // 验证配置格式
-                if (!config.settings || !config.courses) {
+                if (!settings || !courses) {
                     throw new Error('配置文件格式不正确');
                 }
                 
                 // 确认导入
                 if (confirm('导入配置将覆盖当前所有设置、课程和预选课程，是否继续？')) {
                     // 导入设置
-                    this.settings = { ...this.settings, ...config.settings };
+                    this.settings = { ...this.settings, ...settings };
                     this.saveSettings();
                     
                     // 导入课程
-                    this.courses = config.courses;
+                    this.courses = courses;
                     this.saveCourses();
                     
                     // 导入预选课程
-                    if (config.presetCourses) {
-                        this.presetCourses = config.presetCourses;
+                    if (presetCourses) {
+                        this.presetCourses = presetCourses;
                         this.savePresetCourses();
                     }
                     
@@ -974,24 +1009,29 @@ class ScheduleManager {
 
     loadConfigFromUrl(config) {
         try {
+            // 解析配置（支持新旧两种格式）
+            const settings = config.s || config.settings;
+            const courses = config.c || config.courses;
+            const presetCourses = config.p || config.presetCourses;
+            
             // 验证配置格式
-            if (!config.settings || !config.courses) {
+            if (!settings || !courses) {
                 throw new Error('配置文件格式不正确');
             }
             
             // 确认导入
             if (confirm('检测到URL配置，是否加载？这将覆盖当前所有设置、课程和预选课程。')) {
                 // 导入设置
-                this.settings = { ...this.settings, ...config.settings };
+                this.settings = { ...this.settings, ...settings };
                 this.saveSettings();
                 
                 // 导入课程
-                this.courses = config.courses;
+                this.courses = courses;
                 this.saveCourses();
                 
                 // 导入预选课程
-                if (config.presetCourses) {
-                    this.presetCourses = config.presetCourses;
+                if (presetCourses) {
+                    this.presetCourses = presetCourses;
                     this.savePresetCourses();
                 }
                 
@@ -1016,36 +1056,6 @@ class ScheduleManager {
         } catch (error) {
             console.error('加载URL配置失败:', error);
             this.showNotification('加载URL配置失败：' + error.message, 'error');
-        }
-    }
-
-    async generateConfigUrl() {
-        try {
-            const config = {
-                version: '1.1',
-                exportTime: new Date().toISOString(),
-                settings: this.settings,
-                courses: this.courses,
-                presetCourses: this.presetCourses
-            };
-            
-            const configStr = JSON.stringify(config);
-            
-            // 使用 gzip 压缩
-            const compressedBase64 = await this.compressString(configStr);
-            const baseUrl = window.location.origin + window.location.pathname;
-            const configUrl = `${baseUrl}?c=${compressedBase64}`;
-            
-            // 复制到剪贴板
-            navigator.clipboard.writeText(configUrl).then(() => {
-                this.showNotification('配置URL已复制到剪贴板！', 'success');
-            }).catch(() => {
-                // 如果剪贴板API不可用，显示URL供手动复制
-                this.showConfigUrlDialog(configUrl);
-            });
-        } catch (error) {
-            console.error('生成配置URL失败:', error);
-            this.showNotification('生成配置URL失败', 'error');
         }
     }
 
@@ -1125,41 +1135,6 @@ class ScheduleManager {
         
         const decoder = new TextDecoder();
         return decoder.decode(decompressed);
-    }
-
-    showConfigUrlDialog(url) {
-        // 创建模态框显示URL
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">配置URL</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>请复制以下URL分享配置：</p>
-                        <div class="input-group">
-                            <input type="text" class="form-control" value="${url}" readonly id="configUrlInput">
-                            <button class="btn btn-outline-primary" onclick="document.getElementById('configUrlInput').select()">选择</button>
-                        </div>
-                        <p class="text-muted mt-2">配置已使用 gzip 压缩，大幅缩短 URL 长度。</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-        
-        modal.addEventListener('hidden.bs.modal', () => {
-            document.body.removeChild(modal);
-        });
     }
 }
 
