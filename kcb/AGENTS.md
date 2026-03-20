@@ -8,10 +8,11 @@
 
 ## 技术栈
 
-- **前端框架**: 原生 JavaScript (ES6+)
+- **前端框架**: 原生 JavaScript (ES6+, async/await)
 - **UI 框架**: Bootstrap 5.3.0 (CDN)
 - **数据存储**: localStorage
 - **样式**: CSS3 (CSS 变量、渐变、动画)
+- **压缩**: CompressionStream API (gzip)
 
 ## 文件结构
 
@@ -44,9 +45,9 @@ kcb/
 - 下一节课预览
 
 ### 4. 配置管理
-- 导出配置为 JSON 文件
-- 导入 JSON 配置文件
-- 生成配置 URL 用于分享
+- 导出配置：gzip 压缩后复制到剪贴板
+- 导入配置：支持压缩字符串和 JSON 文件
+- URL 分享：通过 `?c=` 参数传递压缩配置
 
 ## 核心类: ScheduleManager
 
@@ -57,11 +58,14 @@ kcb/
 | `init()` | 初始化应用，检查URL配置，渲染界面 |
 | `loadSettings()` / `saveSettings()` | 加载/保存时间设置 |
 | `loadCourses()` / `saveCourses()` | 加载/保存课程数据 |
+| `loadPresetCourses()` / `savePresetCourses()` | 加载/保存预选课程 |
 | `generateTimeSlots()` | 根据设置生成时间段 |
 | `updateCurrentStatus()` | 更新当前状态显示 |
 | `startCountdown()` | 启动倒计时 |
-| `exportConfig()` / `importConfig()` | 导出/导入配置 |
-| `generateConfigUrl()` | 生成可分享的配置 URL |
+| `exportConfig()` | 导出配置（gzip 压缩到剪贴板）|
+| `importConfig()` | 导入配置（支持压缩和 JSON）|
+| `checkUrlConfig()` | 检查并加载 URL 中的配置 |
+| `compressString()` / `decompressString()` | gzip 压缩/解压 |
 
 ## 数据结构
 
@@ -112,6 +116,15 @@ kcb/
 ]
 ```
 
+### 导出配置格式（紧凑）
+```javascript
+{
+  s: { /* settings */ },
+  c: { /* courses */ },
+  p: [ /* presetCourses */ ]
+}
+```
+
 ## 本地运行
 
 由于是纯前端项目，可以直接在浏览器中打开 `index.html` 文件，或使用本地服务器：
@@ -134,4 +147,8 @@ python3 -m http.server 8000
 1. **数据持久化**: 所有数据存储在 localStorage，清除浏览器数据会导致配置丢失
 2. **Bootstrap 依赖**: UI 组件依赖 Bootstrap 5.3.0，模态框和标签页使用 Bootstrap JS API
 3. **响应式设计**: 样式针对移动端进行了优化，断点为 768px 和 576px
-4. **URL 配置**: 通过 `?config=` 参数可传递 JSON 配置，用于分享课程表
+4. **配置导入导出**:
+   - 导出：gzip 压缩 + base64 URL 安全编码，复制到剪贴板
+   - 导入：自动检测压缩格式或 JSON 格式
+   - URL 参数：`?c=<压缩字符串>`（向后兼容 `?config=<JSON>`）
+5. **浏览器兼容**: gzip 压缩使用 CompressionStream API，需要现代浏览器支持（Chrome 80+, Firefox 113+, Safari 16.4+）

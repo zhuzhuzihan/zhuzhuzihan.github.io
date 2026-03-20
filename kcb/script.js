@@ -73,6 +73,46 @@ class ScheduleManager {
         localStorage.setItem('presetCourses', JSON.stringify(this.presetCourses));
         this.renderPresetCoursesTableInSettings();
         this.updatePresetCourseSelect();
+        this.updateBoundCourses();
+    }
+
+    // 更新绑定了预选课程的课程
+    updateBoundCourses() {
+        let hasChanges = false;
+        
+        // 创建预选课程 ID 到课程数据的映射
+        const presetMap = new Map();
+        this.presetCourses.forEach(preset => {
+            presetMap.set(preset.id, preset);
+        });
+        
+        // 遍历所有课程，更新绑定的课程
+        for (const key in this.courses) {
+            const course = this.courses[key];
+            if (course.presetId) {
+                const preset = presetMap.get(course.presetId);
+                if (preset) {
+                    // 更新课程数据（保留原始绑定）
+                    course.name = preset.name;
+                    course.teacher = preset.teacher;
+                    course.location = preset.location;
+                    course.color = preset.color;
+                    course.description = preset.description;
+                    hasChanges = true;
+                } else {
+                    // 预选课程已被删除，移除绑定
+                    delete course.presetId;
+                    hasChanges = true;
+                }
+            }
+        }
+        
+        if (hasChanges) {
+            localStorage.setItem('courses', JSON.stringify(this.courses));
+            this.renderReadOnlySchedule();
+            this.renderEditableSchedule();
+            this.updateCurrentStatus();
+        }
     }
 
     updateSettingsDisplay() {
@@ -211,13 +251,20 @@ class ScheduleManager {
 
     addCourse(courseData) {
         const key = `${courseData.day}-${courseData.timeIndex}`;
-        this.courses[key] = {
+        const course = {
             name: courseData.name,
             teacher: courseData.teacher,
             location: courseData.location,
             color: courseData.color,
             description: courseData.description
         };
+        
+        // 如果从预选课程添加，保存绑定信息
+        if (courseData.presetId) {
+            course.presetId = courseData.presetId;
+        }
+        
+        this.courses[key] = course;
         this.saveCourses();
     }
 
@@ -571,68 +618,17 @@ class ScheduleManager {
         });
     }
 
-    importConfig(event) {
+    importFromFile(event) {
         const file = event.target.files[0];
         if (!file) return;
         
         const reader = new FileReader();
         reader.onload = async (e) => {
-            try {
-                const content = e.target.result.trim();
-                let config = null;
-                
-                // 尝试判断是压缩格式还是JSON格式
-                if (content.startsWith('{')) {
-                    // JSON 格式
-                    config = JSON.parse(content);
-                } else {
-                    // 压缩格式
-                    const decompressed = await this.decompressString(content);
-                    config = JSON.parse(decompressed);
-                }
-                
-                // 解析配置（支持新旧两种格式）
-                const settings = config.s || config.settings;
-                const courses = config.c || config.courses;
-                const presetCourses = config.p || config.presetCourses;
-                
-                // 验证配置格式
-                if (!settings || !courses) {
-                    throw new Error('配置文件格式不正确');
-                }
-                
-                // 确认导入
-                if (confirm('导入配置将覆盖当前所有设置、课程和预选课程，是否继续？')) {
-                    // 导入设置
-                    this.settings = { ...this.settings, ...settings };
-                    this.saveSettings();
-                    
-                    // 导入课程
-                    this.courses = courses;
-                    this.saveCourses();
-                    
-                    // 导入预选课程
-                    if (presetCourses) {
-                        this.presetCourses = presetCourses;
-                        this.savePresetCourses();
-                    }
-                    
-                    // 重新初始化
-                    this.updateSettingsDisplay();
-                    this.updateSettingsForm();
-                    this.generateTimeSlots();
-                    this.renderReadOnlySchedule();
-                    this.renderEditableSchedule();
-                    this.renderPresetCoursesTableInSettings();
-                    this.updatePresetCourseSelect();
-                    this.updateCurrentStatus();
-                    
-                    this.showNotification('配置导入成功！', 'success');
-                }
-            } catch (error) {
-                console.error('导入配置失败:', error);
-                this.showNotification('导入配置失败：' + error.message, 'error');
-            }
+            const content = e.target.result.trim();
+            await this.processImportContent(content);
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
+            if (modal) modal.hide();
         };
         
         reader.onerror = () => {
@@ -640,9 +636,95 @@ class ScheduleManager {
         };
         
         reader.readAsText(file);
-        
-        // 清空文件输入，允许重复选择同一文件
         event.target.value = '';
+    }
+
+    async importFromClipboard() {
+        try {
+            const content = await navigator.clipboard.readText();
+            if (!content || !content.trim()) {
+                this.showNotification('剪贴板为空', 'error');
+                return;
+            }
+            await this.processImportContent(content.trim());
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
+            if (modal) modal.hide();
+        } catch (error) {
+            console.error('读取剪贴板失败:', error);
+            this.showNotification('读取剪贴板失败，请手动粘贴到文本框', 'error');
+        }
+    }
+
+    async importFromTextarea() {
+        const content = document.getElementById('importTextarea').value.trim();
+        if (!content) {
+            this.showNotification('请输入配置字符串', 'error');
+            return;
+        }
+        await this.processImportContent(content);
+        document.getElementById('importTextarea').value = '';
+        // 关闭模态框
+        const modal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
+        if (modal) modal.hide();
+    }
+
+    async processImportContent(content) {
+        try {
+            let config = null;
+            
+            // 尝试判断是压缩格式还是JSON格式
+            if (content.startsWith('{')) {
+                // JSON 格式
+                config = JSON.parse(content);
+            } else {
+                // 压缩格式
+                const decompressed = await this.decompressString(content);
+                config = JSON.parse(decompressed);
+            }
+            
+            // 解析配置（支持新旧两种格式）
+            const settings = config.s || config.settings;
+            const courses = config.c || config.courses;
+            const presetCourses = config.p || config.presetCourses;
+            
+            // 验证配置格式
+            if (!settings || !courses) {
+                throw new Error('配置文件格式不正确');
+            }
+            
+            // 确认导入
+            if (confirm('导入配置将覆盖当前所有设置、课程和预选课程，是否继续？')) {
+                // 导入设置
+                this.settings = { ...this.settings, ...settings };
+                this.saveSettings();
+                
+                // 导入课程
+                this.courses = courses;
+                this.saveCourses();
+                
+                // 导入预选课程
+                if (presetCourses) {
+                    this.presetCourses = presetCourses;
+                    this.savePresetCourses();
+                }
+                
+                // 重新初始化
+                this.updateSettingsDisplay();
+                this.updateSettingsForm();
+                this.generateTimeSlots();
+                this.renderReadOnlySchedule();
+                this.renderEditableSchedule();
+                this.renderPresetCoursesTableInSettings();
+                this.updatePresetCourseSelect();
+                this.updateCurrentStatus();
+                
+                this.showNotification('配置导入成功！', 'success');
+            }
+        } catch (error) {
+            console.error('导入配置失败:', error);
+            this.showNotification('导入配置失败：' + error.message, 'error');
+        }
     }
 
     renderReadOnlySchedule() {
@@ -805,7 +887,31 @@ class ScheduleManager {
     }
 
     deletePresetCourse(index) {
-        if (confirm('确定要删除这个预选课程吗？')) {
+        const preset = this.presetCourses[index];
+        if (!preset) return;
+        
+        // 检查是否有课程绑定了这个预选课程
+        const boundCourses = [];
+        for (const key in this.courses) {
+            if (this.courses[key].presetId === preset.id) {
+                boundCourses.push(key);
+            }
+        }
+        
+        let message = '确定要删除这个预选课程吗？';
+        if (boundCourses.length > 0) {
+            message = `有 ${boundCourses.length} 节课程使用了此预选课程，删除后这些课程将变为自定义课程（不再与预选课程绑定）。确定删除？`;
+        }
+        
+        if (confirm(message)) {
+            // 解绑相关课程
+            boundCourses.forEach(key => {
+                delete this.courses[key].presetId;
+            });
+            if (boundCourses.length > 0) {
+                localStorage.setItem('courses', JSON.stringify(this.courses));
+            }
+            
             this.presetCourses.splice(index, 1);
             this.savePresetCourses();
             this.showNotification('预选课程删除成功！', 'success');
@@ -898,6 +1004,8 @@ class ScheduleManager {
                     name: document.getElementById('courseName').value,
                     teacher: document.getElementById('courseTeacher').value,
                     location: document.getElementById('courseLocation').value,
+                    color: document.getElementById('courseColor')?.value || '#667eea',
+                    description: document.getElementById('courseDescription')?.value || '',
                     fromPreset: false
                 };
             }
