@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#2563eb">
+  <title>群聊管理规则｜进群必看</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --text: #172033;
+      --text-secondary: #5f6b7a;
+      --line: #e5e9ef;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --primary-line: #bfdbfe;
+      --warning: #b45309;
+      --warning-bg: #fffbeb;
+      --warning-line: #fde68a;
+      --danger: #b42318;
+      --danger-bg: #fff5f4;
+      --danger-line: #fecaca;
+      --success: #067647;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 24px;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .page-header {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      color: #fff;
+      background-color: #2563eb;
+      background-image: linear-gradient(135deg, #1d4ed8 0%, #2563eb 58%, #3b82f6 100%);
+    }
+
+    .header-inner {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 48px 0 72px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 5px 11px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .eyebrow::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #bfdbfe;
+      content: "";
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 48px);
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 16px 0 0;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 17px;
+    }
+
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 20px;
+      margin-top: 24px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 14px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      gap: 24px;
+      width: min(1120px, calc(100% - 40px));
+      margin: -36px auto 48px;
+      align-items: start;
+    }
+
+    .sidebar,
+    .content-card {
+      border: 1px solid rgba(229, 233, 239, 0.9);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      padding: 18px;
+    }
+
+    .sidebar-title {
+      margin: 0 0 8px;
+      padding: 0 8px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .nav-list {
+      display: grid;
+      gap: 3px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .nav-list a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 9px;
+      color: #465264;
+      text-decoration: none;
+      transition: background 0.16s ease, color 0.16s ease;
+    }
+
+    .nav-list a:hover,
+    .nav-list a:focus-visible {
+      color: var(--primary);
+      background: var(--primary-soft);
+      outline: none;
+    }
+
+    .nav-number {
+      display: grid;
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      place-items: center;
+      border-radius: 7px;
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .print-button {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: #344054;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .print-button:hover {
+      border-color: #cbd5e1;
+      background: var(--surface-soft);
+    }
+
+    .content-card {
+      overflow: hidden;
+    }
+
+    .notice {
+      margin: 28px 32px 4px;
+      padding: 18px 20px;
+      border: 1px solid var(--warning-line);
+      border-radius: var(--radius-md);
+      color: #713f12;
+      background: var(--warning-bg);
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #92400e;
+      font-size: 16px;
+    }
+
+    .section {
+      padding: 34px 32px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section:last-child {
+      border-bottom: 0;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-index {
+      display: grid;
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 10px;
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+    }
+
+    .rule-list {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: rule;
+    }
+
+    .rule-list[data-start="8"] { counter-reset: rule 7; }
+    .rule-list[data-start="13"] { counter-reset: rule 12; }
+    .rule-list[data-start="21"] { counter-reset: rule 20; }
+    .rule-list[data-start="25"] { counter-reset: rule 24; }
+
+    .rule-item {
+      position: relative;
+      padding: 17px 18px 17px 58px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      counter-increment: rule;
+    }
+
+    .rule-item::before {
+      position: absolute;
+      top: 17px;
+      left: 17px;
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border-radius: 8px;
+      color: var(--primary);
+      background: var(--primary-soft);
+      content: counter(rule);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .rule-item h3 {
+      margin: 0 0 4px;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .rule-item p {
+      margin: 0;
+      color: var(--text-secondary);
+    }
+
+    .rule-item p + p,
+    .rule-item ul {
+      margin-top: 8px;
+    }
+
+    .rule-item ul {
+      margin-bottom: 0;
+      padding-left: 20px;
+      color: var(--text-secondary);
+    }
+
+    .rule-item li + li {
+      margin-top: 3px;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-left: 7px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      color: var(--danger);
+      background: var(--danger-bg);
+      font-size: 12px;
+      font-weight: 700;
+      vertical-align: 2px;
+    }
+
+    .ai-note {
+      border-color: var(--primary-line);
+      background: #fbfdff;
+    }
+
+    .penalty-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .penalty {
+      padding: 17px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--surface-soft);
+    }
+
+    .penalty strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #344054;
+    }
+
+    .penalty p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .penalty.severe {
+      border-color: var(--danger-line);
+      background: var(--danger-bg);
+    }
+
+    .penalty.severe strong {
+      color: var(--danger);
+    }
+
+    .closing {
+      padding: 28px 32px 32px;
+      text-align: center;
+      background: var(--surface-soft);
+    }
+
+    .closing strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 18px;
+    }
+
+    .closing p {
+      margin: 0;
+      color: var(--text-secondary);
+    }
+
+    footer {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto 40px;
+      color: #7a8492;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 820px) {
+      .header-inner {
+        padding: 38px 0 62px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        padding: 12px;
+      }
+
+      .sidebar-title,
+      .print-button {
+        display: none;
+      }
+
+      .nav-list {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+      }
+
+      .nav-list li {
+        flex: 0 0 auto;
+      }
+
+      .nav-list a {
+        border: 1px solid var(--line);
+        padding: 7px 10px;
+        white-space: nowrap;
+      }
+
+      .nav-number {
+        display: none;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        font-size: 15px;
+      }
+
+      .header-inner,
+      .layout,
+      footer {
+        width: min(100% - 24px, 1120px);
+      }
+
+      .header-inner {
+        padding-top: 30px;
+      }
+
+      .subtitle {
+        font-size: 15px;
+      }
+
+      .header-meta {
+        margin-top: 18px;
+      }
+
+      .layout {
+        gap: 12px;
+        margin-top: -28px;
+      }
+
+      .content-card,
+      .sidebar {
+        border-radius: 14px;
+      }
+
+      .notice {
+        margin: 18px 16px 0;
+      }
+
+      .section {
+        padding: 28px 16px;
+      }
+
+      .rule-item {
+        padding: 15px 15px 15px 52px;
+      }
+
+      .rule-item::before {
+        top: 15px;
+        left: 14px;
+      }
+
+      .penalty-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .closing {
+        padding: 24px 18px 28px;
+      }
+    }
+
+    @media print {
+      @page {
+        margin: 16mm;
+      }
+
+      body {
+        color: #000;
+        background: #fff;
+        font-size: 11pt;
+      }
+
+      .page-header {
+        color: #000;
+        background: #fff;
+      }
+
+      .header-inner {
+        width: 100%;
+        padding: 0 0 18px;
+      }
+
+      .eyebrow,
+      .sidebar,
+      .print-button {
+        display: none !important;
+      }
+
+      .subtitle,
+      .header-meta {
+        color: #333;
+      }
+
+      .layout {
+        display: block;
+        width: 100%;
+        margin: 0;
+      }
+
+      .content-card {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .notice {
+        margin: 0 0 14px;
+      }
+
+      .section {
+        padding: 18px 0;
+      }
+
+      .rule-list {
+        gap: 8px;
+      }
+
+      .rule-item,
+      .penalty {
+        break-inside: avoid;
+      }
+
+      footer {
+        width: 100%;
+        margin: 18px 0 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-inner">
+      <div class="eyebrow">防被踢必看</div>
+      <h1>群聊管理规则</h1>
+      <p class="subtitle">
+        本群用于正常交流和互助。进群即视为已阅读并同意以下规则；
+        未阅读群规不能作为违规后的免责理由。
+      </p>
+      <div class="header-meta">
+        <span>最近更新：2026 年 8 月 11 日</span>
+        <span>共 27 条规则</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="页面目录">
+      <p class="sidebar-title">目录</p>
+      <nav>
+        <ul class="nav-list">
+          <li><a href="#communication"><span class="nav-number">01</span>提问与交流</a></li>
+          <li><a href="#spam"><span class="nav-number">02</span>广告与骚扰</a></li>
+          <li><a href="#security"><span class="nav-number">03</span>安全与违规</a></li>
+          <li><a href="#trade"><span class="nav-number">04</span>交易与远程</a></li>
+          <li><a href="#management"><span class="nav-number">05</span>管理与申诉</a></li>
+          <li><a href="#penalty"><span class="nav-number">06</span>处罚标准</a></li>
+        </ul>
+      </nav>
+      <button class="print-button" type="button" onclick="window.print()" aria-label="打印群规或保存为 PDF">
+        打印 / 保存为 PDF
+      </button>
+    </aside>
+
+    <main class="content-card">
+      <div class="notice" role="note">
+        <strong>请先看完再参与群聊</strong>
+        群规不可能列出所有情况。对于规则未明确、但明显影响群聊秩序或危害群员安全的行为，管理有权根据实际情况处理。
+      </div>
+
+      <section class="section" id="communication">
+        <div class="section-heading">
+          <span class="section-index">01</span>
+          <h2>提问与交流</h2>
+        </div>
+        <ol class="rule-list">
+          <li class="rule-item">
+            <h3>尊重正常沟通</h3>
+            <p>无视他人说明、反复曲解意思，或多次提醒后仍拒不配合的，将视情况处理。</p>
+          </li>
+          <li class="rule-item">
+            <h3>提问前先自行搜索</h3>
+            <p>请先使用搜索引擎、群文件和群聊记录等基础渠道。查过仍无法解决，再到群内提问。</p>
+          </li>
+          <li class="rule-item">
+            <h3>把问题描述完整</h3>
+            <p>尽量说明设备、系统、软件版本、操作步骤、报错截图，以及已经尝试过的方法。只发“怎么弄”“为什么不行”“在吗”等内容，没人回复属于正常情况。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止不懂装懂、误导新人</h3>
+            <p>不要传播明显错误的方法。被指出错误后应及时纠正，不得继续耍贫嘴、抬杠或带偏新人。</p>
+          </li>
+          <li class="rule-item ai-note">
+            <h3>不要直接搬运低质量 AI 结果来问</h3>
+            <p>明显是 AI 胡编、答非所问或未经验证的内容，不要整段复制到群里，让别人替你鉴定或收拾烂摊子。</p>
+            <p>确实需要讨论时，请一并说明：</p>
+            <ul>
+              <li>你原本想解决什么问题；</li>
+              <li>AI 给出的关键结论是什么；</li>
+              <li>你自己查证或测试过什么；</li>
+              <li>具体是哪一步有疑问或报错。</li>
+            </ul>
+            <p>单纯甩一大段 AI 内容再问“对不对”“怎么回事”的，可能不予回复；反复发送的按刷屏处理。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止故意引战</h3>
+            <p>包括恶意抬杠、阴阳怪气、挑衅、带节奏，以及长期纠缠争吵。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止人身攻击和恶意挂人</h3>
+            <p>禁止辱骂、歧视、造谣、断章取义，或煽动其他群员围攻他人。</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section" id="spam">
+        <div class="section-heading">
+          <span class="section-index">02</span>
+          <h2>广告与骚扰</h2>
+        </div>
+        <ol class="rule-list" data-start="8">
+          <li class="rule-item">
+            <h3>禁止未经允许发布广告</h3>
+            <p>包括推广、引流、拉人、返利链接，以及宣传其他群聊、频道或平台。无论是否收费、是否与本群相关，未经管理允许均按广告处理。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止擅自拨打 QQ 电话</h3>
+            <p>未经对方允许，不得给群员、群管或群主拨打语音或视频电话。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止私聊骚扰群员</h3>
+            <p>包括批量加好友、私聊推销、拉群、索要资源或联系方式，以及被拒绝后继续纠缠。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止刷屏和消息轰炸</h3>
+            <p>包括大量复读、连续发表情包/图片/语音、频繁撤回、滥用机器人命令，以及无故连续艾特群员或使用“@全体成员”。</p>
+          </li>
+          <li class="rule-item">
+            <h3>不要一直玩“戳一戳”</h3>
+            <p>戳一戳可能无视群免打扰并持续发出通知。偶尔误触不处理，提醒后仍反复戳人的，将禁言或踢出。</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section" id="security">
+        <div class="section-heading">
+          <span class="section-index">03</span>
+          <h2>安全与违规内容</h2>
+        </div>
+        <ol class="rule-list" data-start="13">
+          <li class="rule-item">
+            <h3>禁止开挂及传播外挂</h3>
+            <p>禁止使用、传播、售卖或炫耀外挂。主动自爆或被发现后，管理将直接按规则处理。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止恶意程序和危险文件 <span class="tag">严重违规</span></h3>
+            <p>禁止发送格机、病毒、木马、远控、盗号程序、恶意脚本、钓鱼网站、盗号二维码、伪装安装包及来源不明的可疑文件或短链接；也不得诱导他人执行危险命令。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止诈骗、钓鱼和冒充他人 <span class="tag">严重违规</span></h3>
+            <p>包括假红包、虚假交易、冒充管理或熟人借钱、诱导转账、冒充客服收费等。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止泄露他人隐私 <span class="tag">严重违规</span></h3>
+            <p>未经本人允许，不得公开手机号、地址、定位、照片、聊天记录、订单信息或账号资料；禁止人肉、开盒及威胁曝光隐私。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止涉政内容</h3>
+            <p>禁止讨论敏感政治话题、传播相关内容或故意带政治节奏，无论持何种立场。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止色情和骚扰性内容</h3>
+            <p>偶尔正常尺度的玩笑一般不处理，但请适可而止。露骨内容、色情资源、性骚扰或提醒后仍继续的，将直接处理。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止其他违法违规内容</h3>
+            <p>包括诈骗、赌博、毒品、枪支、盗号、洗号、恶意攻击、开盒、人肉等相关教程、交易和推广。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止造谣和恶意举报</h3>
+            <p>不得伪造截图、断章取义、散布谣言，或恶意举报群聊及群员。</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section" id="trade">
+        <div class="section-heading">
+          <span class="section-index">04</span>
+          <h2>交易与远程服务</h2>
+        </div>
+        <ol class="rule-list" data-start="21">
+          <li class="rule-item">
+            <h3>禁止跑单、拒付和恶意退款</h3>
+            <p>远程或其他付费服务完成后，不得无故跑单、拒绝付款或恶意发起退款。</p>
+          </li>
+          <li class="rule-item">
+            <h3>交易前把条件说清楚</h3>
+            <p>双方应提前确认服务内容、价格、付款方式、完成标准、验收方式及问题处理办法。</p>
+          </li>
+          <li class="rule-item">
+            <h3>纠纷请凭证据处理</h3>
+            <p>请保留完整聊天和转账记录，并联系管理。禁止在群内刷屏、对骂、挂人或煽动群员站队。</p>
+          </li>
+          <li class="rule-item">
+            <h3>私下交易风险自担</h3>
+            <p>本群及群管理默认不为私下交易提供担保。任何“群主担保”或“管理员担保”的说法，都应向相关管理本人确认。</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section" id="management">
+        <div class="section-heading">
+          <span class="section-index">05</span>
+          <h2>管理与申诉</h2>
+        </div>
+        <ol class="rule-list" data-start="25">
+          <li class="rule-item">
+            <h3>请配合管理人员的正常处理</h3>
+            <p>拒不配合、辱骂管理、反复试探规则底线或故意钻漏洞的，可以从重处理。</p>
+          </li>
+          <li class="rule-item">
+            <h3>禁止使用小号逃避处罚</h3>
+            <p>被禁言或踢出后，不得使用小号反复进群、骚扰群员、报复管理或继续违规。</p>
+          </li>
+          <li class="rule-item">
+            <h3>对处罚有异议可以申诉</h3>
+            <p>请携带完整记录私聊群主或相关管理说明情况；禁止在群内刷屏对线、煽动群员或纠缠不休。</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section" id="penalty">
+        <div class="section-heading">
+          <span class="section-index">06</span>
+          <h2>处罚标准</h2>
+        </div>
+        <div class="penalty-grid">
+          <div class="penalty">
+            <strong>一般违规</strong>
+            <p>提醒 → 警告 → 禁言 → 屡教不改踢出。</p>
+          </div>
+          <div class="penalty">
+            <strong>重复或影响较大的违规</strong>
+            <p>根据情节直接禁言，屡次违规可移出群聊。</p>
+          </div>
+          <div class="penalty severe">
+            <strong>严重违规</strong>
+            <p>广告、诈骗、开盒、病毒、盗号、恶意文件及严重骚扰等，原则上直接踢出并拉黑，必要时举报。</p>
+          </div>
+          <div class="penalty">
+            <strong>最终处理依据</strong>
+            <p>由管理根据违规次数、主观恶意、实际影响及事后态度综合判断。</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="closing">
+        <strong>正常交流，好好说话。</strong>
+        <p>提问前先搜索；不懂可以问，但不要把别人当成免费客服。</p>
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    群规会根据实际情况随时补充或修改 · 最后更新于 2026.08.11
+  </footer>
+</body>
+</html>
